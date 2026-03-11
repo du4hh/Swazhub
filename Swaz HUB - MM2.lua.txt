@@ -1,0 +1,132 @@
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
+gui.ResetOnSpawn = false
+
+-- PANEL
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,180,0,110)
+frame.Position = UDim2.new(0,20,0,20)
+frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+frame.Active = true
+frame.Parent = gui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,30)
+title.Text = "Admin Panel"
+title.BackgroundColor3 = Color3.fromRGB(25,25,25)
+title.TextColor3 = Color3.new(1,1,1)
+title.Parent = frame
+
+local scanButton = Instance.new("TextButton")
+scanButton.Size = UDim2.new(1,0,0,40)
+scanButton.Position = UDim2.new(0,0,0,40)
+scanButton.Text = "Scan Players"
+scanButton.Parent = frame
+
+-- DRAG SYSTEM (mobil uyumlu)
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    frame.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch 
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch 
+    or input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+-- ESP
+local function addESP(character,color)
+
+    if character:FindFirstChild("WeaponESP") then
+        character.WeaponESP:Destroy()
+    end
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "WeaponESP"
+    highlight.FillTransparency = 1
+    highlight.OutlineColor = color
+    highlight.Parent = character
+
+end
+
+local function checkWeapons(plr)
+
+    local char = plr.Character
+    if not char then return end
+
+    local backpack = plr:FindFirstChild("Backpack")
+
+    local function scan(container)
+
+        if not container then return end
+
+        for _,item in pairs(container:GetChildren()) do
+            if item:IsA("Tool") then
+
+                local name = string.lower(item.Name)
+
+                if string.find(name,"knife") then
+                    addESP(char,Color3.fromRGB(255,0,0)) -- Katil
+                elseif string.find(name,"gun") then
+                    addESP(char,Color3.fromRGB(0,150,255)) -- Şerif
+                end
+
+            end
+        end
+
+    end
+
+    scan(backpack)
+    scan(char)
+
+end
+
+scanButton.MouseButton1Click:Connect(function()
+
+    for _,plr in pairs(Players:GetPlayers()) do
+        if plr ~= player then
+            checkWeapons(plr)
+        end
+    end
+
+end)
