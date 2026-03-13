@@ -1,0 +1,137 @@
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local espEnabled = true
+
+-- TEAM RENKLERİ
+local teamColors = {
+	["Türk Silahlı Kuvvetleri"] = Color3.fromRGB(120,120,120),
+	["Demir Pençe Direnişi"] = Color3.fromRGB(255,140,0),
+	["Milli İstihbarat Teşkilatı"] = Color3.fromRGB(0,0,0),
+	["Askeri İnzibat"] = Color3.fromRGB(255,255,255),
+	["Özel Koruma Birliği"] = Color3.fromRGB(0,255,0),
+	["Özel Kuvvetler Komutanlığı"] = Color3.fromRGB(255,0,0),
+	["Ordu Generalleri"] = Color3.fromRGB(255,80,80),
+	["Ordu Subayları"] = Color3.fromRGB(255,255,0),
+	["Hava Kuvvetleri Komutanlığı"] = Color3.fromRGB(0,120,255),
+	["Jandarma Genel Komutanlığı"] = Color3.fromRGB(0,0,150),
+	["Deniz Kuvvetleri Komutanlığı"] = Color3.fromRGB(100,200,255),
+	["Kara Kuvvetleri Komutanlığı"] = Color3.fromRGB(120,70,20),
+	["Sınır Koruma Komutanlığı"] = Color3.fromRGB(150,150,150)
+}
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local panel = Instance.new("Frame")
+panel.Size = UDim2.new(0,200,0,80)
+panel.Position = UDim2.new(0,40,0,200)
+panel.BackgroundColor3 = Color3.fromRGB(35,35,35)
+panel.Active = true
+panel.Parent = gui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,30)
+title.Text = "Admin Panel"
+title.TextColor3 = Color3.new(1,1,1)
+title.BackgroundColor3 = Color3.fromRGB(25,25,25)
+title.Parent = panel
+
+local toggle = Instance.new("TextButton")
+toggle.Size = UDim2.new(1,0,0,40)
+toggle.Position = UDim2.new(0,0,0,35)
+toggle.Text = "ESP ON"
+toggle.Parent = panel
+
+toggle.MouseButton1Click:Connect(function()
+	espEnabled = not espEnabled
+	toggle.Text = espEnabled and "ESP ON" or "ESP OFF"
+
+	for _,p in pairs(Players:GetPlayers()) do
+		if p.Character and p.Character:FindFirstChild("ESP") then
+			p.Character.ESP.Enabled = espEnabled
+		end
+	end
+end)
+
+-- MOBİL DRAG
+local dragging
+local dragStart
+local startPos
+
+panel.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = panel.Position
+	end
+end)
+
+panel.InputEnded:Connect(function()
+	dragging = false
+end)
+
+UIS.InputChanged:Connect(function(input)
+	if dragging then
+		local delta = input.Position - dragStart
+		panel.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-- ESP EKLE
+local function addESP(character,team)
+
+	local color = teamColors[team]
+	if not color then return end
+
+	if character:FindFirstChild("ESP") then
+		character.ESP:Destroy()
+	end
+
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "ESP"
+	highlight.FillColor = color
+	highlight.OutlineColor = Color3.new(0,0,0)
+
+	-- BU KISIM UZAKTAN GÖRÜNMEYİ SAĞLAR
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+
+	highlight.Parent = character
+
+end
+
+-- OYUNCU AYARLARI
+local function setupPlayer(p)
+
+	local function apply()
+		if p.Character and p.Team then
+			addESP(p.Character,p.Team.Name)
+		end
+	end
+
+	p.CharacterAdded:Connect(function()
+		task.wait(1)
+		apply()
+	end)
+
+	p:GetPropertyChangedSignal("Team"):Connect(apply)
+
+	apply()
+
+end
+
+for _,p in pairs(Players:GetPlayers()) do
+	if p ~= player then
+		setupPlayer(p)
+	end
+end
+
+Players.PlayerAdded:Connect(setupPlayer)
