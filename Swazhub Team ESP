@@ -4,23 +4,6 @@ local UIS = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local espEnabled = true
 
--- TEAM RENKLERİ
-local teamColors = {
-	["Türk Silahlı Kuvvetleri"] = Color3.fromRGB(120,120,120),
-	["Demir Pençe Direnişi"] = Color3.fromRGB(255,140,0),
-	["Milli İstihbarat Teşkilatı"] = Color3.fromRGB(0,0,0),
-	["Askeri İnzibat"] = Color3.fromRGB(255,255,255),
-	["Özel Koruma Birliği"] = Color3.fromRGB(0,255,0),
-	["Özel Kuvvetler Komutanlığı"] = Color3.fromRGB(255,0,0),
-	["Ordu Generalleri"] = Color3.fromRGB(255,80,80),
-	["Ordu Subayları"] = Color3.fromRGB(255,255,0),
-	["Hava Kuvvetleri Komutanlığı"] = Color3.fromRGB(0,120,255),
-	["Jandarma Genel Komutanlığı"] = Color3.fromRGB(0,0,150),
-	["Deniz Kuvvetleri Komutanlığı"] = Color3.fromRGB(100,200,255),
-	["Kara Kuvvetleri Komutanlığı"] = Color3.fromRGB(120,70,20),
-	["Sınır Koruma Komutanlığı"] = Color3.fromRGB(150,150,150)
-}
-
 -- GUI
 local gui = Instance.new("ScreenGui")
 gui.ResetOnSpawn = false
@@ -89,8 +72,9 @@ end)
 -- ESP EKLE
 local function addESP(character,team)
 
-	local color = teamColors[team]
-	if not color then return end
+	if not team then return end
+
+	local color = team.TeamColor.Color
 
 	if character:FindFirstChild("ESP") then
 		character.ESP:Destroy()
@@ -100,8 +84,6 @@ local function addESP(character,team)
 	highlight.Name = "ESP"
 	highlight.FillColor = color
 	highlight.OutlineColor = Color3.new(0,0,0)
-
-	-- BU KISIM UZAKTAN GÖRÜNMEYİ SAĞLAR
 	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 
 	highlight.Parent = character
@@ -113,7 +95,7 @@ local function setupPlayer(p)
 
 	local function apply()
 		if p.Character and p.Team then
-			addESP(p.Character,p.Team.Name)
+			addESP(p.Character,p.Team)
 		end
 	end
 
